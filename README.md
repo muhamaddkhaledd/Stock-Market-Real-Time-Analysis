@@ -35,14 +35,17 @@ To run the project, make sure you have **Docker** and **Docker Compose** install
 ```bash
 git clone https://github.com/yourusername/stock-market-realtime-analysis.git
 cd stock-market-realtime-analysis
+```
 
 2. Build and run all services using Docker Compose:
 ```bash
 docker-compose up -d
-
+```
 3. Access the Streamlit Dashboard:
+```bash
 Open your browser and go to: http://localhost:8501
-
+```
 To stop the project:
 ```bash
 docker-compose down
+```
