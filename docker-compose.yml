@@ -1,0 +1,112 @@
+version: "3.9"
+services:
+
+#  opensearch:
+#    image: opensearchproject/opensearch:latest
+#    container_name: opensearch
+#    networks:
+#      - spark-net
+#    environment:
+#      - discovery.type=single-node
+#      - plugins.security.disabled=true
+#      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+#      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=Mohamed1234-
+#    ports:
+#      - "9200:9200"
+#      - "9600:9600"
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
+#  opensearch-dashboards:
+#    image: opensearchproject/opensearch-dashboards:latest
+#    container_name: opensearch-dashboards
+#    networks:
+#      - spark-net
+#    ports:
+#      - "5601:5601"
+#    environment:
+#      - OPENSEARCH_HOSTS=http://opensearch:9200
+#      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+#    depends_on:
+#      - opensearch
+  broker:
+    image: apache/kafka:latest
+    container_name: broker
+    networks:
+      - spark-net
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://host.docker.internal:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_NUM_PARTITIONS: 3
+    ports:
+      - "9092:9092"
+  spark:
+    image: apache/spark:3.5.7-scala
+    container_name: spark
+    user: root
+    networks:
+      - spark-net
+    ports:
+      - "8080:8080"   # Spark UI
+      - "7077:7077"   # Spark Master port
+    volumes:
+      - .:/app        # Mount current folder inside container
+    working_dir: /app
+    command: >
+      bash -c "
+        apt-get update &&
+        apt-get install -y python3 python3-pip &&
+        pip3 install pyspark kafka-python &&
+        spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,org.postgresql:postgresql:42.5.1 /app/Stock_Real-Time_Processing.py
+      "
+  kafkarun:
+    image: python:3.10-slim
+    container_name: kafka
+    depends_on:
+      - broker
+    networks:
+      - spark-net
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir kafka-python websocket-client==1.8.0 && python3 /app/kafka_producer.py"
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    networks:
+      - spark-net
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: stock_data
+  streamlit:
+    image: python:3.10-slim
+    container_name: streamlit
+    depends_on:
+      - postgres
+    networks:
+      - spark-net
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    working_dir: /app
+    command: >
+      sh -c "pip install --no-cache-dir streamlit pandas psycopg2-binary plotly altair streamlit-autorefresh && streamlit run streamlit_app.py --server.port=8501 --server.address=0.0.0.0"
+networks:
+  spark-net:
+    driver: bridge

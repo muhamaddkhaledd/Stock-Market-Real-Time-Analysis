@@ -1,0 +1,5 @@
+kafka-python
+opensearch-py
+sseclient-py
+websocket-client==1.8.0
+pyspark
