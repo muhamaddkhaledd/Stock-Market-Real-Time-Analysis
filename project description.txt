@@ -1,0 +1,8 @@
+Project Description:
+This project is a real-time stock market analytics platform designed to provide continuous insights into market activities. It fetches live stock market data from the Binance API and processes it through a robust streaming pipeline built with Kafka and Apache Spark.
+
+The architecture works as follows: the Binance API feeds live trading data into a Kafka producer, which streams the data into Spark Streaming for real-time processing. Spark performs various computations and generates key market metrics such as average price, total traded quantity, traded value, average quantity, volatility, buy/sell counts, buy/sell ratio, and trade count. These analytics are continuously updated in real-time as new data arrives.
+
+Processed results are then stored directly into a PostgreSQL database, which keeps accumulating the data while the Spark Streaming application runs. A Streamlit-based dashboard retrieves data from PostgreSQL and visualizes it through dynamic charts and graphs. The dashboard updates every few seconds to reflect the latest market changes, providing users with live insights into stock market trends.
+
+The entire system, including data ingestion, streaming analytics, database storage, and dashboard visualization, is containerized using Docker, ensuring smooth deployment and scalability across environments. This project demonstrates the integration of real-time data pipelines, advanced analytics, and interactive visualization to create a comprehensive stock market monitoring solution.

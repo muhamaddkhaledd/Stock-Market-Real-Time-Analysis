@@ -38,7 +38,7 @@ final = df.groupBy(window(col("timestamp"), "10 seconds", "5 seconds"), col("s")
         sum(col("price") * col("quantity")).alias("traded_value"),
         avg("quantity").alias("avg_quantity"),
         stddev("price").alias("volatility"),
-        count(when(col("m") == False, True)).alias("buy_count"),ش
+        count(when(col("m") == False, True)).alias("buy_count"),
         count(when(col("m") == True, True)).alias("sell_count"),
         (count(when(col("m") == False, True)) / count(when(col("m") == True, True))).alias("buy_sell_ratio"),
         count("*").alias("trade_count")
